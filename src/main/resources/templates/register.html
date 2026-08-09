@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - Sekai</title>
+    <link rel="stylesheet" th:href="@{/register.css}">
+</head>
+<body>
+
+<div class="register-box">
+    <div class="logo">✦</div>
+    <h2>创建账号</h2>
+    <p class="subtitle">加入 Sekai 二次元电商平台</p>
+
+    <form id="regForm">
+        <div class="input-item">
+            <label>用户名</label>
+            <input type="text" id="userName" placeholder="请输入用户名" required>
+        </div>
+
+        <div class="input-item">
+            <label>密码</label>
+            <input type="password" id="pwd" placeholder="请输入密码" required>
+        </div>
+
+        <div class="input-item">
+            <label>手机号</label>
+            <input type="text" id="mobile" placeholder="请输入手机号" required>
+        </div>
+
+        <div class="input-item">
+            <label>邮箱</label>
+            <input type="email" id="email" placeholder="请输入邮箱" required>
+        </div>
+
+        <div class="input-item">
+            <label>姓名</label>
+            <input type="text" id="name" placeholder="请输入真实姓名" required>
+        </div>
+
+        <div class="input-item">
+            <label>性别</label>
+            <select id="gender" required>
+                <option value="">请选择性别</option>
+                <option value="male">男</option>
+                <option value="female">女</option>
+            </select>
+        </div>
+
+        <button type="submit" class="reg-btn">✦ 立即注册</button>
+        <div class="link">已有账号？<a href="/login">去登录 →</a></div>
+    </form>
+</div>
+
+<script th:src="@{register.js}"></script>
+</body>
+</html>

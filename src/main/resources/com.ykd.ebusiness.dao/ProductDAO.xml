@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.youkeda.application.ebusiness.dao.ProductDAO">
+
+    <!-- 结果映射 -->
+    <resultMap id="ProductResultMap" type="com.youkeda.application.ebusiness.dataobject.ProductDO">
+        <id column="id" property="id"/>
+        <result column="gmt_created" property="gmtCreated"/>
+        <result column="gmt_modified" property="gmtModified"/>
+        <result column="user_id" property="userId"/>
+        <result column="name" property="name"/>
+        <result column="description" property="description"/>
+        <result column="images" property="images"/>
+        <result column="detail" property="detail"/>
+        <result column="status" property="status"/>
+        <result column="category_ids" property="categoryIds"/>
+        <result column="price" property="price"/>
+        <result column="stock" property="stock"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id,gmt_created,gmt_modified,user_id,name,description,images,detail,status,category_ids,price,stock
+    </sql>
+
+    <!-- 1. 新增商品 -->
+    <insert id="insert" parameterType="com.youkeda.application.ebusiness.dataobject.ProductDO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ykd_ebusiness_product (
+        gmt_created,
+        gmt_modified,
+        user_id,
+        name,
+        description,
+        images,
+        detail,
+        status,
+        category_ids,
+        price,
+        stock
+        ) VALUES (
+        now(),
+        now(),
+        #{userId},
+        #{name},
+        #{description},
+        #{images},
+        #{detail},
+        #{status},
+        #{categoryIds},
+        #{price},
+        #{stock}
+        )
+    </insert>
+
+    <!-- 2. 根据名称查询 -->
+    <select id="selectByName" resultMap="ProductResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ykd_ebusiness_product
+        WHERE name = #{name}
+        LIMIT 1
+    </select>
+
+    <!-- 3. 根据ID查询 -->
+    <select id="selectById" resultMap="ProductResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ykd_ebusiness_product
+        WHERE id = #{id}
+    </select>
+
+    <!-- 4. 更新库存 -->
+    <update id="updateStock" parameterType="com.youkeda.application.ebusiness.dataobject.ProductDO">
+        UPDATE ykd_ebusiness_product
+        SET
+        stock = #{stock},
+        gmt_modified = now()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 5. 查询总数量 -->
+    <select id="selectAllCounts" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM ykd_ebusiness_product
+    </select>
+
+    <!-- 6. 分页查询 -->
+    <select id="pageQuery" parameterType="com.youkeda.application.ebusiness.param.BasePageParam" resultMap="ProductResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ykd_ebusiness_product
+        ORDER BY gmt_created DESC
+        LIMIT #{start}, #{pageSize}
+    </select>
+
+</mapper>
