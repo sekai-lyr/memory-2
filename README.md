@@ -1,6 +1,6 @@
-# 🛒 Sekai eBusiness · 电商练习项目
+﻿# 馃洅 Sekai eBusiness 路 鐢靛晢缁冧範椤圭洰
 
-> **Spring Boot + MyBatis 分层电商后端**
+> **Spring Boot + MyBatis 鍒嗗眰鐢靛晢鍚庣**
 > A clean, layered e-commerce backend built with Spring Boot + MyBatis
 
 [![Java](https://img.shields.io/badge/Java-17-orange)](https://www.oracle.com/java/)
@@ -9,49 +9,46 @@
 [![Maven](https://img.shields.io/badge/Maven-Wrapper-blue)](https://maven.apache.org/)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-基于 **Spring Boot + MyBatis** 的电商业务练习项目，采用 `com.youkeda.application.ebusiness` 包结构，分层清晰，适合作为电商后端入门与进阶参考。
+鍩轰簬 **Spring Boot + MyBatis** 鐨勭數鍟嗕笟鍔＄粌涔犻」鐩紝閲囩敤 `com.youkeda.application.ebusiness` 鍖呯粨鏋勶紝鍒嗗眰娓呮櫚锛岄€傚悎浣滀负鐢靛晢鍚庣鍏ラ棬涓庤繘闃跺弬鑰冦€?
+An e-commerce practice project with **clear layered architecture** 鈥?a great reference for learning backend development.
 
-An e-commerce practice project with **clear layered architecture** — a great reference for learning backend development.
-
-## 📐 Layered Architecture / 分层架构
+## 馃搻 Layered Architecture / 鍒嗗眰鏋舵瀯
 
 ```text
-control ──→ service ──→ dao ──→ MySQL
-    ↑           ↑
-    └── model ───┘ (DTO)
+control 鈹€鈹€鈫?service 鈹€鈹€鈫?dao 鈹€鈹€鈫?MySQL
+    鈫?          鈫?    鈹斺攢鈹€ model 鈹€鈹€鈹€鈹?(DTO)
 ```
 
-- `control/`：接口入口 API controllers
-- `service/`：业务逻辑 Business logic
-- `dao/`：数据访问层 Data access
-- `dataobject/`：数据库实体 DB entities
-- `model/`：前后端传输对象 DTOs
-- `data-build/`：数据库初始化脚本 DB init scripts
+- `control/`锛氭帴鍙ｅ叆鍙?API controllers
+- `service/`锛氫笟鍔￠€昏緫 Business logic
+- `dao/`锛氭暟鎹闂眰 Data access
+- `dataobject/`锛氭暟鎹簱瀹炰綋 DB entities
+- `model/`锛氬墠鍚庣浼犺緭瀵硅薄 DTOs
+- `data-build/`锛氭暟鎹簱鍒濆鍖栬剼鏈?DB init scripts
 
-## 🛠️ Tech Stack / 技术栈
+## 馃洜锔?Tech Stack / 鎶€鏈爤
 
 - Java 17 + Spring Boot 3.x
 - MyBatis
-- Maven（含 `mvnw` 包装器）
+- Maven锛堝惈 `mvnw` 鍖呰鍣級
 
-## ▶️ Quick Start / 快速开始
-
+## 鈻讹笍 Quick Start / 蹇€熷紑濮?
 ```powershell
-# 1. 初始化数据库（脚本在 data-build/）
-# 2. 配置 src/main/resources/application.properties 中的数据库账号
-mvn spring-boot:run
+# 1. 鍒濆鍖栨暟鎹簱锛堣剼鏈湪 data-build/锛?# 2. 閰嶇疆 src/main/resources/application.properties 涓殑鏁版嵁搴撹处鍙?mvn spring-boot:run
 ```
 
-数据库密码通过环境变量注入（`DB_PASSWORD`），避免硬编码。
+鏁版嵁搴撳瘑鐮侀€氳繃鐜鍙橀噺娉ㄥ叆锛坄DB_PASSWORD`锛夛紝閬垮厤纭紪鐮併€?
+## 馃摑 Notes / 璇存槑
 
-## 📝 Notes / 说明
+鏈」鐩负瀛︿範/缁冧範鎬ц川椤圭洰锛岄€傚悎浣滀负鐢靛晢鍚庣鍏ラ棬鍙傝€冦€?
+## 馃搫 License
 
-本项目为学习/练习性质项目，适合作为电商后端入门参考。
+[MIT](LICENSE) 漏 2026 [sekai-lyr](https://github.com/sekai-lyr)
 
-## 📄 License
 
-[MIT](LICENSE) © 2026 [sekai-lyr](https://github.com/sekai-lyr)
-
+<p align="center">
+  <img src="screenshots/demo.gif" alt="Demo" width="720"/>
+</p>
 ---
 
-**⭐ If this project helped you, star it! 如果这个项目对你有帮助，欢迎 Star！**
+**猸?If this project helped you, star it! 濡傛灉杩欎釜椤圭洰瀵逛綘鏈夊府鍔╋紝娆㈣繋 Star锛?*
