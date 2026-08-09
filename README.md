@@ -1,4 +1,4 @@
-﻿# 馃洅 Sekai eBusiness 路 鐢靛晢缁冧範椤圭洰
+# 馃洅 Sekai eBusiness 路 鐢靛晢缁冧範椤圭洰
 
 > **Spring Boot + MyBatis 鍒嗗眰鐢靛晢鍚庣**
 > A clean, layered e-commerce backend built with Spring Boot + MyBatis
@@ -47,7 +47,7 @@ control 鈹€鈹€鈫?service 鈹€鈹€鈫?dao 鈹€鈹€鈫?MySQL
 
 
 <p align="center">
-  <img src="screenshots/demo.gif" alt="Demo" width="720"/>
+  <img src="screenshots/demo.webp" alt="Demo" width="720"/>
 </p>
 ---
 
