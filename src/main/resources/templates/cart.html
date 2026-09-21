@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>购物车 | Sekai</title>
+    <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+<!-- THESIS: 购物车是下单前的缓冲区，帮助收藏者重新确认物件和数量。 OWN-WORLD: 纸白摘要、墨黑分隔线、朱砂结算动作，克制且可扫描。 STORY: 选择商品、调整数量、移除条目，再填写收货信息完成结算。 FIRST VIEWPORT: 左侧商品清单，右侧固定结算摘要。 FORM: 折纸展开方向，assigned index 4，seed 0403ecff。 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance. -->
+<div id="siteHeader"></div>
+
+<main class="page split-page">
+    <section data-intro>
+        <div class="page-kicker">购买前确认</div>
+        <h1>购物车</h1>
+        <p class="split-page-intro" id="cartIntro">把还在考虑的收藏品放在这里。</p>
+        <div class="cart-list" id="cartList" aria-live="polite"><div class="loading-state"><h3>正在读取购物车</h3><p>商品信息很快就会出现。</p></div></div>
+    </section>
+    <aside class="cart-summary" data-intro>
+        <h2 class="summary-title">结算摘要</h2>
+        <div class="summary-line"><span>已选商品</span><strong id="selectedCount">0 件</strong></div>
+        <div class="summary-line"><span>商品金额</span><strong id="selectedAmount">¥0.00</strong></div>
+        <div class="summary-line"><span>运费</span><strong>下单时确认</strong></div>
+        <div class="summary-line total"><span>应付金额</span><strong class="summary-total" id="selectedTotal">¥0.00</strong></div>
+        <button class="button button-primary summary-action" type="button" id="checkoutButton" disabled>去结算</button>
+        <p class="summary-note">当前流程为模拟支付。订单创建后，请在订单页手动完成支付状态。</p>
+    </aside>
+</main>
+<footer><div class="footer-inner"><span>Sekai 收藏市场</span><span>购物车内容属于当前登录账号。</span></div></footer>
+
+<div class="dialog-backdrop" id="checkoutDialog" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">
+    <div class="dialog">
+        <button class="dialog-close" type="button" id="closeCheckout">关闭</button>
+        <h2 id="checkoutTitle">填写收货信息</h2>
+        <p class="dialog-intro" id="checkoutIntro"></p>
+        <form class="checkout-form" id="checkoutForm">
+            <label for="receiverName">收货人<input id="receiverName" autocomplete="name" placeholder="请输入收货人姓名" required></label>
+            <label for="receiverPhone">联系电话<input id="receiverPhone" autocomplete="tel" placeholder="请输入手机号" required></label>
+            <label for="receiverAddress">收货地址<textarea id="receiverAddress" autocomplete="street-address" rows="3" placeholder="请输入详细收货地址" required></textarea></label>
+            <div class="dialog-actions"><button class="button button-secondary" type="button" id="cancelCheckout">再想想</button><button class="button button-primary" type="submit" id="submitCheckout">创建订单</button></div>
+        </form>
+    </div>
+</div>
+
+<script src="/common.js"></script>
+<script>
+    let cart = [];
+    const selected = new Set();
+    const cartList = document.getElementById('cartList');
+    function selectedItems() { return cart.filter(item => selected.has(Number(item.id)) && item.status === 'ON'); }
+    function renderSummary() { const items = selectedItems(); const amount = items.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0), 0); document.getElementById('selectedCount').textContent = `${items.length} 件`; document.getElementById('selectedAmount').textContent = Sekai.fmtMoney(amount); document.getElementById('selectedTotal').textContent = Sekai.fmtMoney(amount); document.getElementById('checkoutButton').disabled = !items.length; document.getElementById('cartIntro').textContent = cart.length ? `共 ${cart.length} 件商品，选择想要一起结算的物件。` : '把还在考虑的收藏品放在这里。'; }
+    function render() { renderSummary(); if (!cart.length) { cartList.innerHTML = '<div class="empty-state"><h3>购物车还是空的</h3><p>去发现页挑一件真正想摆在身边的收藏品。</p><a class="button button-primary" href="/product/list">去发现</a></div>'; return; } cartList.innerHTML = cart.map(item => { const image = item.productImage; const unavailable = item.status !== 'ON'; return `<article class="cart-row ${unavailable ? 'is-unavailable' : ''}" data-intro><input class="cart-check" type="checkbox" data-cart-check="${item.id}" ${selected.has(Number(item.id)) ? 'checked' : ''} ${unavailable ? 'disabled' : ''} aria-label="选择 ${Sekai.esc(item.productName)}"><div class="cart-image">${image ? `<img src="${Sekai.esc(image)}" alt="${Sekai.esc(item.productName)}">` : '<div class="card-media-fallback">暂无图片</div>'}</div><div class="cart-copy"><div class="cart-name">${Sekai.esc(item.productName || '未命名商品')}</div><div class="cart-note">${unavailable ? '商品已下架，请移除' : `库存 ${Number(item.stock) || 0} 件`}</div></div><div class="cart-unit">${Sekai.fmtMoney(item.price)}</div><div class="stepper"><button type="button" onclick="changeQuantity(${item.id}, -1)" ${unavailable ? 'disabled' : ''}>-</button><input value="${Number(item.quantity) || 1}" readonly aria-label="${Sekai.esc(item.productName)} 数量"><button type="button" onclick="changeQuantity(${item.id}, 1)" ${unavailable ? 'disabled' : ''}>+</button></div><div class="cart-subtotal">${Sekai.fmtMoney(Number(item.price) * Number(item.quantity))}</div><button class="icon-button" type="button" onclick="removeItem(${item.id})" aria-label="移除 ${Sekai.esc(item.productName)}">移除</button></article>`; }).join(''); Sekai.$$('[data-cart-check]').forEach(input => input.addEventListener('change', () => { const id = Number(input.dataset.cartCheck); if (input.checked) selected.add(id); else selected.delete(id); renderSummary(); })); Sekai.playIntro(cartList, { duration: 500, stagger: 45 }); }
+    async function load() { const result = await Sekai.api('/trade/cart/list/api'); if (!Sekai.isSuccess(result)) return; cart = result.data || []; cart.forEach(item => { if (item.status === 'ON') selected.add(Number(item.id)); }); render(); }
+    async function changeQuantity(id, delta) { const item = cart.find(entry => Number(entry.id) === Number(id)); if (!item) return; const next = Math.max(1, Math.min(Number(item.stock) || 1, Number(item.quantity) + delta)); if (next === Number(item.quantity)) return; const result = await Sekai.api('/trade/cart/update/api', { method: 'POST', body: { id, quantity: next } }); if (Sekai.isSuccess(result)) { item.quantity = next; render(); } else if (result) Sekai.toast(result.message || '数量更新失败', 'error'); }
+    async function removeItem(id) { const result = await Sekai.api('/trade/cart/remove/api', { method: 'POST', body: { id } }); if (Sekai.isSuccess(result)) { cart = cart.filter(item => Number(item.id) !== Number(id)); selected.delete(Number(id)); render(); Sekai.refreshCartBadge(); } else if (result) Sekai.toast(result.message || '移除失败', 'error'); }
+    function closeCheckout() { document.getElementById('checkoutDialog').classList.remove('open'); }
+    document.getElementById('checkoutButton').addEventListener('click', () => { if (!selectedItems().length) return; document.getElementById('checkoutIntro').textContent = `已选 ${selectedItems().length} 件商品，合计 ${document.getElementById('selectedTotal').textContent}`; document.getElementById('checkoutDialog').classList.add('open'); document.getElementById('receiverName').focus(); });
+    document.getElementById('closeCheckout').addEventListener('click', closeCheckout); document.getElementById('cancelCheckout').addEventListener('click', closeCheckout); document.getElementById('checkoutDialog').addEventListener('click', event => { if (event.target.id === 'checkoutDialog') closeCheckout(); });
+    document.getElementById('checkoutForm').addEventListener('submit', async event => { event.preventDefault(); const receiver = { name: document.getElementById('receiverName').value.trim(), phone: document.getElementById('receiverPhone').value.trim(), address: document.getElementById('receiverAddress').value.trim() }; if (!receiver.name || !receiver.phone || !receiver.address) { Sekai.toast('请填写完整的收货信息', 'error'); return; } const button = document.getElementById('submitCheckout'); button.disabled = true; button.textContent = '创建中'; const result = await Sekai.api('/trade/order/checkout/api', { method: 'POST', body: { cartIds: selectedItems().map(item => item.id), receiver } }); button.disabled = false; button.textContent = '创建订单'; if (Sekai.isSuccess(result)) { closeCheckout(); Sekai.toast('订单已创建，请到订单页完成模拟支付', 'success'); window.setTimeout(() => { location.href = '/trade/orders'; }, 850); } else if (result) Sekai.toast(result.message || '结算失败', 'error'); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeCheckout(); });
+    (async () => { await Sekai.init('cart'); if (!Sekai.requireLogin()) return; load(); })();
+</script>
+</body>
+</html>

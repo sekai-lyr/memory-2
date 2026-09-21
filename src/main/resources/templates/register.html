@@ -1,58 +1,23 @@
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>注册 - Sekai</title>
-    <link rel="stylesheet" th:href="@{/register.css}">
+    <title>创建账号 | Sekai</title>
+    <link rel="stylesheet" href="/common.css">
 </head>
 <body>
-
-<div class="register-box">
-    <div class="logo">✦</div>
-    <h2>创建账号</h2>
-    <p class="subtitle">加入 Sekai 二次元电商平台</p>
-
-    <form id="regForm">
-        <div class="input-item">
-            <label>用户名</label>
-            <input type="text" id="userName" placeholder="请输入用户名" required>
-        </div>
-
-        <div class="input-item">
-            <label>密码</label>
-            <input type="password" id="pwd" placeholder="请输入密码" required>
-        </div>
-
-        <div class="input-item">
-            <label>手机号</label>
-            <input type="text" id="mobile" placeholder="请输入手机号" required>
-        </div>
-
-        <div class="input-item">
-            <label>邮箱</label>
-            <input type="email" id="email" placeholder="请输入邮箱" required>
-        </div>
-
-        <div class="input-item">
-            <label>姓名</label>
-            <input type="text" id="name" placeholder="请输入真实姓名" required>
-        </div>
-
-        <div class="input-item">
-            <label>性别</label>
-            <select id="gender" required>
-                <option value="">请选择性别</option>
-                <option value="male">男</option>
-                <option value="female">女</option>
-            </select>
-        </div>
-
-        <button type="submit" class="reg-btn">✦ 立即注册</button>
-        <div class="link">已有账号？<a href="/login">去登录 →</a></div>
-    </form>
-</div>
-
-<script th:src="@{register.js}"></script>
+<!-- THESIS: 创建账号要让收藏者尽快进入市场，也要为订单留下必要信息。 OWN-WORLD: 墨黑侧栏、纸白字段、朱砂提交动作，信息层级稳定。 STORY: 用户填写账号与联系信息，注册成功后直接进入发现页。 FIRST VIEWPORT: 左侧解释用途，右侧按完成顺序排列字段。 FORM: 折纸展开方向，assigned index 4，seed 0403ecff。 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance. -->
+<div id="siteHeader"></div>
+<main class="auth-page">
+    <div class="auth-layout">
+        <section class="auth-intro" data-intro>
+            <div th:replace="~{fragments/auth-showcase :: auth-showcase}"></div>
+            <div class="auth-intro-copy"><div class="page-kicker">加入 Sekai</div><h1>给你的收藏，一个可以回来的地方。</h1><p>注册即登录，创建后就能购买或发布商品。</p><ul class="auth-list"><li>收藏品目录持续更新</li><li>订单状态清楚可追踪</li><li>你的商品由你自己管理</li></ul></div>
+        </section>
+        <section class="auth-panel" data-intro><h2>创建账号</h2><p>填写这些信息，马上开始。</p><form class="auth-form" id="regForm" novalidate><div class="field-grid"><div class="field"><label for="userName">账号</label><input id="userName" autocomplete="username" placeholder="用于登录" required><div class="field-error" id="userNameError"></div></div><div class="field"><label for="pwd">密码</label><input id="pwd" type="password" autocomplete="new-password" placeholder="至少 6 位" required><div class="field-error" id="pwdError"></div></div><div class="field"><label for="name">称呼</label><input id="name" autocomplete="name" placeholder="怎么称呼你" required><div class="field-error" id="nameError"></div></div><div class="field"><label for="gender">性别</label><select id="gender" required><option value="">请选择</option><option value="M">男</option><option value="F">女</option><option value="OTHER">其他</option></select><div class="field-error" id="genderError"></div></div><div class="field"><label for="mobile">手机号</label><input id="mobile" autocomplete="tel" placeholder="用于联系" required><div class="field-error" id="mobileError"></div></div><div class="field"><label for="email">邮箱</label><input id="email" type="email" autocomplete="email" placeholder="用于订单联系" required><div class="field-error" id="emailError"></div></div></div><button class="button button-primary auth-submit" type="submit" id="registerButton">创建账号</button><div class="auth-links"><a href="/login">已有账号，去登录</a><a href="/product/list">先逛逛市场</a></div></form></section>
+    </div>
+</main>
+<script src="/common.js"></script><script src="/auth-showcase.js"></script><script src="/register.js"></script>
 </body>
 </html>

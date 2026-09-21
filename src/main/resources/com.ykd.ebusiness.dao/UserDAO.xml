@@ -52,6 +52,10 @@
         DELETE FROM ykd_ebusiness_user WHERE id = #{id}
     </delete>
 
+    <select id="findById" resultMap="userResultMap">
+        SELECT * FROM ykd_ebusiness_user WHERE id = #{id}
+    </select>
+
     <select id="findByUserName" resultMap="userResultMap">
         SELECT * FROM ykd_ebusiness_user WHERE user_name = #{userName}
     </select>

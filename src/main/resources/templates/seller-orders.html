@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>经营订单 | Sekai</title>
+    <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+<!-- THESIS: 卖家经营页把“有人买了”变成可执行的发货清单。 OWN-WORLD: 纸白工作台、墨黑编号、朱砂待处理状态。 STORY: 卖家查看真实订单状态、销售合计和待发货动作。 FIRST VIEWPORT: 标题后先给出来自订单数据的摘要，再给出按状态的清单。 FORM: 折纸展开方向，assigned index 4，seed 0403ecff。 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance. -->
+<div id="siteHeader"></div>
+
+<main class="page orders-page">
+    <div class="page-head" data-intro><div class="page-head-copy"><div class="page-kicker">卖家工具</div><h1 class="page-title">经营订单</h1><p class="page-intro" id="sellerIntro">查看需要你处理的订单。</p></div><a class="button button-secondary" href="/product/mine">管理商品</a></div>
+    <section class="seller-summary" id="sellerSummary" aria-label="销售摘要"><div class="seller-stat"><div class="seller-stat-label">订单总数</div><div class="seller-stat-value">-</div></div><div class="seller-stat"><div class="seller-stat-label">待发货</div><div class="seller-stat-value">-</div></div><div class="seller-stat"><div class="seller-stat-label">订单金额</div><div class="seller-stat-value">-</div></div></section>
+    <nav class="status-tabs" id="statusTabs" aria-label="卖家订单状态"></nav>
+    <section class="order-list" id="sellerOrderList" aria-live="polite"><div class="loading-state"><h3>正在读取订单</h3><p>请稍等一下。</p></div></section>
+</main>
+<footer><div class="footer-inner"><span>Sekai 收藏市场</span><span>只有已支付订单可以标记为已发货。</span></div></footer>
+
+<script src="/common.js"></script>
+<script>
+    const sellerTabs = [{ key: '', label: '全部' }, { key: 'PAID', label: '待发货' }, { key: 'SHIPPED', label: '已发货' }, { key: 'DONE', label: '已完成' }, { key: 'CANCELLED', label: '已取消' }];
+    const sellerStatusLabels = { PENDING: '待支付', PAID: '待发货', SHIPPED: '已发货', DONE: '已完成', CANCELLED: '已取消' };
+    let sellerOrders = [];
+    let activeStatus = '';
+    function renderStats() { const amount = sellerOrders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0); document.querySelector('#sellerSummary .seller-stat:nth-child(1) .seller-stat-value').textContent = sellerOrders.length; document.querySelector('#sellerSummary .seller-stat:nth-child(2) .seller-stat-value').textContent = sellerOrders.filter(order => order.status === 'PAID').length; document.querySelector('#sellerSummary .seller-stat:nth-child(3) .seller-stat-value').textContent = Sekai.fmtMoney(amount); }
+    function renderTabs() { const counts = {}; sellerOrders.forEach(order => { counts[order.status] = (counts[order.status] || 0) + 1; }); document.getElementById('statusTabs').innerHTML = sellerTabs.map(tab => `<button class="status-tab ${activeStatus === tab.key ? 'active' : ''}" type="button" data-status="${tab.key}">${tab.label}<span class="count">${tab.key ? counts[tab.key] || 0 : sellerOrders.length}</span></button>`).join(''); Sekai.$$('.status-tab').forEach(button => button.addEventListener('click', () => { activeStatus = button.dataset.status; renderTabs(); renderOrders(); })); }
+    function renderOrders() { const visible = activeStatus ? sellerOrders.filter(order => order.status === activeStatus) : sellerOrders; document.getElementById('sellerIntro').textContent = activeStatus ? `${sellerStatusLabels[activeStatus]}订单 ${visible.length} 笔` : `共 ${sellerOrders.length} 笔订单，先处理待发货项。`; const list = document.getElementById('sellerOrderList'); if (!visible.length) { list.innerHTML = '<div class="empty-state"><h3>这里暂时没有订单</h3><p>状态变化后，订单会回到这里。</p></div>'; return; } list.innerHTML = visible.map(order => `<article class="seller-order-card reveal"><div><div class="manage-name">${Sekai.esc(order.productName || '未命名商品')}</div><div class="seller-buyer">买家账号编号 #${order.buyerId || '-'}，数量 ${Number(order.quantity) || 0} 件</div><div class="seller-time">${Sekai.dateLabel(order.gmtCreated)} · ${Sekai.esc(order.orderNo || `#${order.id}`)}</div></div><div><div class="seller-order-total">${Sekai.fmtMoney(order.totalAmount)}</div><div class="manage-status">${sellerStatusLabels[order.status] || order.status}</div></div><div class="seller-order-actions">${order.status === 'PAID' ? `<button class="button button-primary button-small" type="button" onclick="shipOrder(${order.id})">标记发货</button>` : `<a class="button button-secondary button-small" href="/product/detail?id=${order.productId}">查看商品</a>`}</div></article>`).join(''); Sekai.observeReveals(list); }
+    async function load() { const result = await Sekai.api('/trade/order/list/api?role=seller'); if (Sekai.isSuccess(result)) { sellerOrders = result.data || []; renderStats(); renderTabs(); renderOrders(); } else document.getElementById('sellerOrderList').innerHTML = '<div class="error-state"><h3>订单暂时无法加载</h3><p>请稍后重试。</p><button class="button button-secondary" type="button" onclick="load()">重新加载</button></div>'; }
+    async function shipOrder(id) { const result = await Sekai.api('/trade/order/ship/api', { method: 'POST', body: { id } }); if (Sekai.isSuccess(result)) { Sekai.toast('订单已标记为已发货', 'success'); load(); } else if (result) Sekai.toast(result.message || '发货更新失败', 'error'); }
+    (async () => { await Sekai.init('seller'); if (!Sekai.requireLogin()) return; load(); })();
+</script>
+</body>
+</html>

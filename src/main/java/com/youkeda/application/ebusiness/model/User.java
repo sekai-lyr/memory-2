@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import tools.jackson.databind.annotation.JsonSerialize;
 import tools.jackson.databind.ser.std.ToStringSerializer;
 
-public class User {
+public class User extends BaseID<Long> {
 
    private String userName;
 

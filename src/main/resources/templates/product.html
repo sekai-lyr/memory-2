@@ -1,87 +1,79 @@
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>发布新商品 - Sekai</title>
-    <link rel="stylesheet" th:href="@{/product.css}">
+    <title id="formTitle">发布收藏品 | Sekai</title>
+    <link rel="stylesheet" href="/common.css">
 </head>
 <body>
+<!-- THESIS: 发布是一张可恢复的收藏档案，不是填完即忘的后台表格。 OWN-WORLD: 墨黑表单、纸白底、朱砂动作色，信息以折页式章节展开。 STORY: 卖家填写事实、选择分类、补充图片，提交后回到自己的商品目录。 FIRST VIEWPORT: 左侧说明与约束，右侧首先呈现商品身份字段。 FORM: 折纸展开方向，assigned index 4，seed 0403ecff。 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance. -->
+<div id="siteHeader"></div>
 
-<div id="toastContainer" class="toast-container"></div>
+<main class="page">
+    <div class="form-layout">
+        <aside class="form-rail" data-intro>
+            <div class="page-kicker">卖家工具</div>
+            <h1 id="formHeading">让一件喜欢的东西，找到下一位收藏者。</h1>
+            <p>写清楚它是什么、现在在哪里，以及收藏者需要知道的事实。</p>
+            <div class="form-rail-note">图片支持本地上传与 URL。商品提交后默认上架，之后可以在“我的商品”中管理状态。</div>
+        </aside>
 
-<div class="pub-box">
-    <div class="pub-header">
-        <div class="icon">✦</div>
-        <h2>发布新商品</h2>
-        <p>填写商品信息，上架到 Sekai 商城</p>
+        <form class="product-form" id="productForm" novalidate data-intro>
+            <input type="hidden" id="productId">
+            <section class="form-section">
+                <h2>先给它一个名字</h2>
+                <div class="field-grid">
+                    <div class="field field-full"><label for="name">商品名称 <span>*</span></label><input id="name" maxlength="100" placeholder="例如：初音未来 亚克力立牌「凝望你的你」" required><div class="field-error" id="nameError"></div></div>
+                    <div class="field field-full"><label for="description">商品描述</label><textarea id="description" placeholder="写下材质、角色、系列或你希望买家知道的内容"></textarea><div class="field-hint">描述越具体，买家越容易判断它是否适合自己的收藏。</div><div class="field-error" id="descriptionError"></div></div>
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h2>把它放进目录</h2>
+                <div class="field-grid">
+                    <div class="field"><label for="price">价格 <span>*</span></label><input id="price" type="number" min="0" step="0.01" placeholder="0.00" required><div class="field-error" id="priceError"></div></div>
+                    <div class="field"><label for="stock">库存 <span>*</span></label><input id="stock" type="number" min="0" step="1" placeholder="0" required><div class="field-error" id="stockError"></div></div>
+                    <div class="field field-full"><label for="categorySelect">分类</label><div class="category-picker"><select id="categorySelect"><option value="">选择一个分类</option></select></div><div class="selected-categories" id="selectedCategories"></div><div class="field-error" id="categoryError"></div></div>
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h2>让图片先说话</h2>
+                <div class="field-grid">
+                    <div class="field field-full"><label for="mainImageUrl">主图 URL</label><div class="image-source-row"><input id="mainImageUrl" placeholder="https://... 或 /uploads/..." data-target="main"><button class="button button-secondary button-small" type="button" data-add-url="main">添加</button></div><div class="upload-zone">也可以从本地选择图片<input id="mainImageFile" type="file" accept="image/*" data-upload-target="main"></div><div class="image-preview" id="mainPreview"></div><div class="field-error" id="mainImageError"></div></div>
+                    <div class="field field-full"><label for="detailImageUrl">详情图 URL</label><div class="image-source-row"><input id="detailImageUrl" placeholder="补充材质、尺寸或包装照片" data-target="detail"><button class="button button-secondary button-small" type="button" data-add-url="detail">添加</button></div><div class="upload-zone">从本地选择详情图片<input id="detailImageFile" type="file" accept="image/*" data-upload-target="detail"></div><div class="image-preview" id="detailPreview"></div></div>
+                </div>
+            </section>
+
+            <div class="form-actions"><button class="button button-primary" type="submit" id="submitButton">发布商品</button><a class="button button-secondary" href="/product/mine">返回我的商品</a><span class="form-status" id="formStatus" role="status"></span></div>
+        </form>
     </div>
+</main>
+<footer><div class="footer-inner"><span>Sekai 收藏市场</span><span>发布前请确认图片、价格和库存信息。</span></div></footer>
 
-    <form id="pubForm">
-        <div class="form-grid">
-            <div class="item full-width">
-                <label>商品名称 <span class="required">*</span></label>
-                <input type="text" id="name" placeholder="请输入商品名称，例如：iPhone 15 Pro Max" maxlength="100" required>
-                <div class="error-msg"></div>
-            </div>
+<script src="/common.js"></script>
+<script>
+    const editId = new URLSearchParams(location.search).get('id');
+    const formState = { categories: [], selected: [], main: [], detail: [] };
+    const form = document.getElementById('productForm');
+    const categorySelect = document.getElementById('categorySelect');
 
-            <div class="item full-width">
-                <label>商品描述 <span class="required">*</span></label>
-                <textarea id="description" rows="3" placeholder="请输入商品描述，突出核心卖点和优势" required></textarea>
-                <div class="error-msg"></div>
-            </div>
-
-            <div class="item">
-                <label>商品价格 <span class="required">*</span></label>
-                <input type="number" step="0.01" id="price" placeholder="例如：7999.00" min="0" required>
-                <div class="error-msg"></div>
-            </div>
-
-            <div class="item">
-                <label>库存数量 <span class="required">*</span></label>
-                <input type="number" id="stock" placeholder="例如：50" min="0" required>
-                <div class="error-msg"></div>
-            </div>
-
-            <div class="item full-width">
-                <label>商品分类 <span class="required">*</span></label>
-                <select id="categorySelect">
-                    <option value="">选择分类...</option>
-                </select>
-                <div id="categoryTags" class="category-tags"></div>
-            </div>
-
-            <div class="item full-width">
-                <label>商品图片</label>
-                <div style="display:flex;gap:8px;">
-                    <input type="text" id="images" class="image-url-input" data-target="images" placeholder="输入图片URL，按回车添加" style="flex:1;">
-                    <button type="button" class="btn btn-secondary add-image-btn" data-target="images" style="flex:none;padding:12px 20px;font-size:13px;">添加</button>
-                </div>
-                <div id="imagePreview" class="image-preview-container"></div>
-            </div>
-
-            <div class="item full-width">
-                <label>详情图片</label>
-                <div style="display:flex;gap:8px;">
-                    <input type="text" id="detail" class="image-url-input" data-target="detail" placeholder="输入详情图片URL，按回车添加" style="flex:1;">
-                    <button type="button" class="btn btn-secondary add-image-btn" data-target="detail" style="flex:none;padding:12px 20px;font-size:13px;">添加</button>
-                </div>
-                <div id="detailPreview" class="image-preview-container"></div>
-            </div>
-
-            <div class="btn-group">
-                <button type="submit" class="btn btn-primary" id="submitBtn">
-                    <span class="spinner"></span>
-                    <span class="btn-text">✦ 发布商品</span>
-                </button>
-                <button type="button" class="btn btn-secondary" onclick="location.href='/product/list'">
-                    ← 查看商品列表
-                </button>
-            </div>
-        </div>
-    </form>
-</div>
-
-<script th:src="@{/product.js}"></script>
+    function showFieldError(id, message) { const element = document.getElementById(id); element.textContent = message; element.previousElementSibling?.classList.add('invalid'); }
+    function clearFieldErrors() { Sekai.$$('.field-error').forEach(element => { element.textContent = ''; element.previousElementSibling?.classList.remove('invalid'); }); }
+    function renderCategories() { const parents = formState.categories.filter(category => category.parentCategoryId === 0 || category.parentCategoryId == null); categorySelect.innerHTML = '<option value="">选择一个分类</option>' + parents.map(parent => { const children = formState.categories.filter(category => Number(category.parentCategoryId) === Number(parent.id)); return `<optgroup label="${Sekai.esc(parent.name)}"><option value="${parent.id}">${Sekai.esc(parent.name)}（主类）</option>${children.map(child => `<option value="${child.id}">${Sekai.esc(child.name)}</option>`).join('')}</optgroup>`; }).join(''); }
+    function renderSelected() { document.getElementById('selectedCategories').innerHTML = formState.selected.map(category => `<span class="selected-category">${Sekai.esc(category.name)}<button type="button" data-remove-category="${category.id}" aria-label="移除 ${Sekai.esc(category.name)}">移除</button></span>`).join(''); Sekai.$$('[data-remove-category]').forEach(button => button.addEventListener('click', () => { formState.selected = formState.selected.filter(category => Number(category.id) !== Number(button.dataset.removeCategory)); renderSelected(); })); }
+    function renderImages(target) { const container = document.getElementById(target === 'main' ? 'mainPreview' : 'detailPreview'); const images = formState[target]; container.innerHTML = images.map((image, index) => `<div class="image-preview-card"><img src="${Sekai.esc(image)}" alt="已添加图片 ${index + 1}"><button type="button" data-remove-image="${target}" data-index="${index}">移除</button></div>`).join(''); Sekai.$$(`[data-remove-image="${target}"]`).forEach(button => button.addEventListener('click', () => { formState[target].splice(Number(button.dataset.index), 1); renderImages(target); })); }
+    function addImage(target, url) { const value = String(url || '').trim(); if (!value || formState[target].includes(value)) return; formState[target].push(value); renderImages(target); }
+    async function uploadFile(target, file) { if (!file) return; const body = new FormData(); body.append('file', file); const response = await fetch('/upload/image', { method: 'POST', body }); const result = await response.json().catch(() => null); if (Sekai.isSuccess(result)) { addImage(target, result.data); Sekai.toast('图片已上传', 'success'); } else Sekai.toast(result?.message || '图片上传失败', 'error'); }
+    function fillProduct(product) { document.getElementById('productId').value = product.id || ''; document.getElementById('name').value = product.name || ''; document.getElementById('description').value = product.description || ''; document.getElementById('price').value = product.price ?? ''; document.getElementById('stock').value = product.stock ?? ''; formState.main = Sekai.parseImages(product.images); formState.detail = Sekai.parseImages(product.detail); const ids = (() => { try { return JSON.parse(product.categoryIds || '[]').map(Number); } catch (error) { return []; } })(); formState.selected = formState.categories.filter(category => ids.includes(Number(category.id))); renderSelected(); renderImages('main'); renderImages('detail'); }
+    function validate() { clearFieldErrors(); let valid = true; const name = document.getElementById('name').value.trim(); const price = Number(document.getElementById('price').value); const stock = Number(document.getElementById('stock').value); if (!name) { showFieldError('nameError', '请填写商品名称'); valid = false; } if (!Number.isFinite(price) || price < 0) { showFieldError('priceError', '请输入不小于 0 的价格'); valid = false; } if (!Number.isInteger(stock) || stock < 0) { showFieldError('stockError', '请输入不小于 0 的整数库存'); valid = false; } return valid; }
+    async function load() { const categories = await Sekai.api('/category/list/api'); if (Sekai.isSuccess(categories)) { formState.categories = categories.data || []; renderCategories(); } if (editId) { document.getElementById('formHeading').textContent = '把这件收藏品，继续交代清楚。'; document.getElementById('formTitle').textContent = '编辑收藏品 | Sekai'; document.getElementById('submitButton').textContent = '保存修改'; const result = await Sekai.api(`/product/detail/api?id=${editId}`); if (Sekai.isSuccess(result)) fillProduct(result.data); else Sekai.toast(result?.message || '商品加载失败', 'error'); } }
+    categorySelect.addEventListener('change', () => { const category = formState.categories.find(item => Number(item.id) === Number(categorySelect.value)); if (category && !formState.selected.some(item => Number(item.id) === Number(category.id))) formState.selected.push(category); categorySelect.value = ''; renderSelected(); });
+    Sekai.$$('[data-add-url]').forEach(button => button.addEventListener('click', () => { const target = button.dataset.addUrl; const input = document.querySelector(`[data-target="${target}"]`); addImage(target, input.value); input.value = ''; }));
+    Sekai.$$('[data-upload-target]').forEach(input => input.addEventListener('change', () => uploadFile(input.dataset.uploadTarget, input.files[0])));
+    form.addEventListener('submit', async event => { event.preventDefault(); if (!Sekai.requireLogin() || !validate()) return; const body = { name: document.getElementById('name').value.trim(), description: document.getElementById('description').value.trim(), price: Number(document.getElementById('price').value), stock: Number(document.getElementById('stock').value), categoryIds: JSON.stringify(formState.selected.map(category => category.id)), images: JSON.stringify(formState.main), detail: JSON.stringify(formState.detail) }; if (editId) body.id = Number(editId); const button = document.getElementById('submitButton'); const status = document.getElementById('formStatus'); button.disabled = true; status.textContent = '保存中'; const result = await Sekai.api(editId ? '/product/update/api' : '/product/pub/api', { method: 'POST', body }); button.disabled = false; status.textContent = ''; if (Sekai.isSuccess(result)) { Sekai.toast(editId ? '商品已更新' : '商品已发布', 'success'); window.setTimeout(() => { location.href = '/product/mine'; }, 700); } else Sekai.toast(result?.message || '保存失败', 'error'); });
+    (async () => { await Sekai.init('mine'); if (!Sekai.requireLogin()) return; await load(); })();
+</script>
 </body>
 </html>

@@ -3,7 +3,7 @@ package com.youkeda.application.ebusiness.model;
 import java.util.List;
 import java.util.Map;
 
-public class Category {
+public class Category extends BaseDate {
 
     private String name;
 

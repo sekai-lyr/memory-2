@@ -18,5 +18,7 @@ public interface UserDAO {
 
     UserDO findByUserName(@Param("userName") String userName);
 
+    UserDO findById(@Param("id") Long id);
+
     List<UserDO> findByIds(@Param("ids") List<Long> ids);
 }

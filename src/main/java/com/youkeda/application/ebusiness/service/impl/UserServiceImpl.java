@@ -57,11 +57,12 @@ public class UserServiceImpl implements UserService {
         UserDO userDO=new UserDO(user);
         int insertRow = userDAO.add(userDO);
         if (insertRow > 0) {
+            userDO.setPassword(null);
             Result<User> result = new Result<>();
             result.setCode("200");
-            result.setMessage("注册成功，数据库已保存");
+            result.setMessage("注册成功");
             result.setSuccess(true);
-            result.setData(user);
+            result.setData(userDO.convertToModel());
             return result;
         } else {
             return fail("400", "数据库异常");
@@ -100,8 +101,10 @@ public class UserServiceImpl implements UserService {
         // 4. 校验通过，登录成功
         Result<User> result = new Result<User>();
         result.setCode("200");
-        result.setMessage("登陆成功");
+        result.setMessage("登录成功");
         result.setSuccess(true);
+        dbUser.setPassword(null);
+        result.setData(dbUser.convertToModel());
         return result;
     }
 

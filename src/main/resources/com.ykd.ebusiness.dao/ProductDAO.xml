@@ -67,7 +67,7 @@
         WHERE id = #{id}
     </select>
 
-    <!-- 4. 更新库存 -->
+    <!-- 4. 更新库存（直接覆盖） -->
     <update id="updateStock" parameterType="com.youkeda.application.ebusiness.dataobject.ProductDO">
         UPDATE ykd_ebusiness_product
         SET
@@ -76,12 +76,76 @@
         WHERE id = #{id}
     </update>
 
-    <!-- 5. 查询总数量 -->
+    <!-- 5. 扣减库存（带库存校验，避免超卖） -->
+    <update id="deductStock">
+        UPDATE ykd_ebusiness_product
+        SET
+        stock = stock - #{quantity},
+        gmt_modified = now()
+        WHERE id = #{id} AND stock >= #{quantity}
+    </update>
+
+    <!-- 6. 更新商品信息 -->
+    <update id="updateProduct" parameterType="com.youkeda.application.ebusiness.dataobject.ProductDO">
+        UPDATE ykd_ebusiness_product
+        SET
+        gmt_modified = now(),
+        name = #{name},
+        description = #{description},
+        images = #{images},
+        detail = #{detail},
+        category_ids = #{categoryIds},
+        price = #{price},
+        stock = #{stock}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 7. 更新商品状态（上架/下架） -->
+    <update id="updateStatus">
+        UPDATE ykd_ebusiness_product
+        SET status = #{status}, gmt_modified = now()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 8. 删除商品 -->
+    <delete id="deleteById">
+        DELETE FROM ykd_ebusiness_product WHERE id = #{id}
+    </delete>
+
+    <!-- 9. 市场：在售商品总数 -->
+    <select id="selectOnCounts" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM ykd_ebusiness_product WHERE status = 'ON'
+    </select>
+
+    <!-- 10. 市场：在售商品分页 -->
+    <select id="pageQueryOnSale" parameterType="com.youkeda.application.ebusiness.param.BasePageParam" resultMap="ProductResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ykd_ebusiness_product
+        WHERE status = 'ON'
+        ORDER BY gmt_created DESC
+        LIMIT #{start}, #{pageSize}
+    </select>
+
+    <!-- 11. 我的商品总数 -->
+    <select id="selectCountByUserId" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM ykd_ebusiness_product WHERE user_id = #{userId}
+    </select>
+
+    <!-- 12. 我的商品分页 -->
+    <select id="pageQueryByUserId" parameterType="com.youkeda.application.ebusiness.param.BasePageParam" resultMap="ProductResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ykd_ebusiness_product
+        WHERE user_id = #{userId}
+        ORDER BY gmt_created DESC
+        LIMIT #{start}, #{pageSize}
+    </select>
+
+    <!-- 13. 查询总数量 -->
     <select id="selectAllCounts" resultType="java.lang.Integer">
         SELECT COUNT(*) FROM ykd_ebusiness_product
     </select>
 
-    <!-- 6. 分页查询 -->
+    <!-- 14. 分页查询（全部，内部使用） -->
     <select id="pageQuery" parameterType="com.youkeda.application.ebusiness.param.BasePageParam" resultMap="ProductResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM ykd_ebusiness_product

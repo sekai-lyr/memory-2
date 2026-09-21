@@ -12,7 +12,7 @@ public class GlobalExceptionHandler {
         Result<?> result = new Result<>();
         result.setSuccess(false);
         result.setCode("500");
-        // 把真实错误信息返回给前端！
+        // 把真实错误信息返回给前端
         result.setMessage("系统异常：" + e.getMessage());
         return result;
     }

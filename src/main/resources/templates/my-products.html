@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的商品 | Sekai</title>
+    <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+<!-- THESIS: 卖家需要的是一个可控的收藏目录，而不是密集后台。 OWN-WORLD: 纸白页面、墨黑分隔线、朱砂动作色，列表让物件保持主角位置。 STORY: 卖家查看自己的商品，编辑事实、切换上架状态或删除条目。 FIRST VIEWPORT: 标题与发布动作位于上方，商品列表紧接其后。 FORM: 折纸展开方向，assigned index 4，seed 0403ecff。 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance. -->
+<div id="siteHeader"></div>
+
+<main class="page page-narrow">
+    <div class="page-head" data-intro>
+        <div class="page-head-copy"><div class="page-kicker">卖家工具</div><h1 class="page-title">我的商品</h1><p class="page-intro" id="productSummary">正在整理你的目录。</p></div>
+        <div class="button-row"><a class="button button-primary" href="/product/publish">发布商品</a></div>
+    </div>
+    <section id="productList" class="manage-list" aria-live="polite"><div class="loading-state"><h3>正在整理目录</h3><p>稍等一下，商品信息马上出现。</p></div></section>
+</main>
+<footer><div class="footer-inner"><span>Sekai 收藏市场</span><span>商品状态只影响市场展示，不会删除订单记录。</span></div></footer>
+
+<script src="/common.js"></script>
+<script>
+    let products = [];
+    function render() { const list = document.getElementById('productList'); document.getElementById('productSummary').textContent = `共 ${products.length} 件商品，${products.filter(product => product.status === 'ON').length} 件正在市场展示。`; if (!products.length) { list.innerHTML = '<div class="empty-state"><h3>还没有发布商品</h3><p>从一件你愿意交代清楚的收藏品开始。</p><a class="button button-primary" href="/product/publish">发布商品</a></div>'; return; } list.innerHTML = products.map(product => { const image = Sekai.firstImage(product.images); const live = product.status === 'ON'; return `<article class="manage-row reveal"><div class="manage-image">${image ? `<img src="${Sekai.esc(image)}" alt="${Sekai.esc(product.name)}" loading="lazy">` : '<div class="card-media-fallback">暂无图片</div>'}</div><div><div class="manage-name">${Sekai.esc(product.name || '未命名商品')}</div><div class="manage-meta">编号 #${product.id} · 库存 ${Number(product.stock) || 0} 件</div></div><div class="manage-price">${Sekai.fmtMoney(product.price)}</div><div class="manage-status ${live ? 'live' : ''}">${live ? '正在展示' : '已隐藏'}</div><div class="manage-actions"><a class="button button-secondary button-small" href="/product/edit?id=${product.id}">编辑</a><button class="button button-quiet button-small" type="button" onclick="toggleStatus(${product.id}, '${live ? 'OFF' : 'ON'}')">${live ? '下架' : '上架'}</button><button class="button button-danger button-small" type="button" onclick="deleteProduct(${product.id})">删除</button></div></article>`; }).join(''); Sekai.observeReveals(list); }
+    async function load() { const result = await Sekai.api('/product/mine/api?pageNum=1&pageSize=999'); if (!Sekai.isSuccess(result)) { document.getElementById('productList').innerHTML = '<div class="error-state"><h3>目录加载失败</h3><p>请稍后重试。</p><button class="button button-secondary" type="button" onclick="load()">重新加载</button></div>'; return; } products = result.data?.data || []; render(); }
+    async function toggleStatus(id, status) { const result = await Sekai.api('/product/status/api', { method: 'POST', body: { id, status } }); if (Sekai.isSuccess(result)) { Sekai.toast(status === 'ON' ? '商品已上架' : '商品已下架', 'success'); load(); } else if (result) Sekai.toast(result.message || '状态更新失败', 'error'); }
+    async function deleteProduct(id) { if (!window.confirm('确认删除这件商品吗？删除后无法恢复。')) return; const result = await Sekai.api('/product/delete/api', { method: 'POST', body: { id } }); if (Sekai.isSuccess(result)) { Sekai.toast('商品已删除', 'success'); load(); } else if (result) Sekai.toast(result.message || '删除失败', 'error'); }
+    (async () => { await Sekai.init('mine'); if (!Sekai.requireLogin()) return; load(); })();
+</script>
+</body>
+</html>

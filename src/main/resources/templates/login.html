@@ -1,43 +1,23 @@
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登录 - Sekai</title>
-    <link rel="stylesheet" th:href="@{/login.css}">
+    <title>登录 | Sekai</title>
+    <link rel="stylesheet" href="/common.css">
 </head>
 <body>
-<div class="login-container">
-    <div class="login-box">
-        <div class="logo">✦</div>
-        <h2 class="title">欢迎回来</h2>
-        <p class="subtitle">Sekai 二次元电商平台</p>
-
-        <form id="loginForm" class="login-form">
-            <div class="input-group">
-                <label>账号</label>
-                <input type="text" id="username" placeholder="请输入用户名/邮箱" required>
-            </div>
-
-            <div class="input-group">
-                <label>密码</label>
-                <input type="password" id="password" placeholder="请输入密码" required>
-            </div>
-
-            <div class="remember">
-                <input type="checkbox" id="remember">
-                <label for="remember">记住我</label>
-            </div>
-
-            <button type="submit" class="login-btn">✦ 立即登录</button>
-
-            <div class="links">
-                <a href="">忘记密码？</a>
-                <a href="/reg">立即注册 →</a>
-            </div>
-        </form>
+<!-- THESIS: 登录只是回到收藏桌面的入口，不制造多余流程。 OWN-WORLD: 墨黑侧栏与纸白表单形成明确层级，朱砂用于提交动作。 STORY: 账号登录后回到发现页，未注册用户可直接创建账号。 FIRST VIEWPORT: 左侧说明产品用途，右侧只保留完成登录所需字段。 FORM: 折纸展开方向，assigned index 4，seed 0403ecff。 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance. -->
+<div id="siteHeader"></div>
+<main class="auth-page">
+    <div class="auth-layout">
+        <section class="auth-intro" data-intro>
+            <div th:replace="~{fragments/auth-showcase :: auth-showcase}"></div>
+            <div class="auth-intro-copy"><div class="page-kicker">Sekai 收藏市场</div><h1>回到你的收藏桌面。</h1><p>查看购物车、订单和你发布的商品。</p><ul class="auth-list"><li>在具体的物件里发现下一件收藏</li><li>买家与卖家使用同一套订单记录</li><li>图片、库存和状态保持清楚</li></ul></div>
+        </section>
+        <section class="auth-panel" data-intro><h2>登录</h2><p>使用你的 Sekai 账号继续。</p><form class="auth-form" id="loginForm" novalidate><div class="field"><label for="username">账号</label><input id="username" autocomplete="username" placeholder="请输入账号" required><div class="field-error" id="usernameError"></div></div><div class="field"><label for="password">密码</label><input id="password" type="password" autocomplete="current-password" placeholder="请输入密码" required><div class="field-error" id="passwordError"></div></div><button class="button button-primary auth-submit" type="submit" id="loginButton">登录</button><div class="auth-links"><a href="/reg">创建账号</a><a href="/product/list">先逛逛市场</a></div><div class="auth-note">登录后可以加入购物车、创建订单和管理自己的商品。</div></form></section>
     </div>
-</div>
-<script th:src="@{/login.js}"></script>
+</main>
+<script src="/common.js"></script><script src="/auth-showcase.js"></script><script src="/login.js"></script>
 </body>
 </html>

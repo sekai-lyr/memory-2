@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="查看 Sekai 收藏市场商品详情。">
+    <title>商品详情 | Sekai</title>
+    <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+<!-- THESIS: 让一件收藏品像档案一样被确认，再进入购物动作。 OWN-WORLD: 纸白、墨黑、朱砂红，图像与细线共同组织信息。 STORY: 访客查看图片、描述、库存和卖家，再选择数量并下单或加入购物车。 FIRST VIEWPORT: 左侧大图画廊，右侧标题、价格、库存和动作。 FORM: 折纸展开方向，assigned index 4，seed 0403ecff。 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance. -->
+<div id="siteHeader"></div>
+
+<main class="page">
+    <div class="breadcrumbs"><a href="/product/list">发现</a><span id="crumbName">商品详情</span></div>
+    <section id="detailLayout" class="detail-layout" hidden>
+        <div class="reveal">
+            <div class="gallery-main" id="galleryMain"><span class="gallery-empty">图片加载中</span></div>
+            <div class="thumb-row" id="thumbRow"></div>
+        </div>
+        <div class="detail-info reveal">
+            <div class="page-kicker" id="productCategory">收藏品</div>
+            <h1 id="productName">加载中</h1>
+            <p class="detail-description" id="productDescription"></p>
+            <div class="detail-price"><strong id="productPrice">¥0.00</strong><span>当前标价</span></div>
+            <div class="detail-meta">
+                <div class="meta-item"><span class="meta-label">库存</span><span class="meta-value" id="productStock">-</span></div>
+                <div class="meta-item"><span class="meta-label">商品编号</span><span class="meta-value" id="productId">-</span></div>
+                <div class="meta-item"><span class="meta-label">上架时间</span><span class="meta-value" id="productDate">-</span></div>
+            </div>
+            <div class="quantity-row"><span class="quantity-label">数量</span><div class="stepper"><button type="button" id="decreaseQty" aria-label="减少数量">-</button><input id="quantity" value="1" readonly aria-label="购买数量"><button type="button" id="increaseQty" aria-label="增加数量">+</button></div><span class="quantity-label" id="stockHint"></span></div>
+            <div class="button-row detail-actions"><button class="button button-primary" type="button" id="buyButton">立即购买</button><button class="button button-secondary" type="button" id="cartButton">加入购物车</button></div>
+            <div class="seller-line"><span class="seller-avatar" id="sellerAvatar">S</span><div class="seller-copy"><span class="seller-name" id="sellerName">商品发布者</span><span class="seller-note">由 Sekai 会话与订单流程管理</span></div></div>
+        </div>
+    </section>
+
+    <section id="detailSection" class="detail-block reveal" hidden>
+        <div class="detail-block-header"><h2>商品资料</h2><span class="page-note">图片来自商品详情字段</span></div>
+        <div class="detail-images" id="detailImages"></div>
+        <p class="section-copy" id="detailText"></p>
+    </section>
+    <section id="detailError" class="error-state" hidden><h3>商品暂时无法打开</h3><p id="detailErrorText">请返回市场重新选择。</p><a class="button button-secondary" href="/product/list">返回市场</a></section>
+</main>
+
+<div class="dialog-backdrop" id="checkoutDialog" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">
+    <div class="dialog">
+        <button class="dialog-close" type="button" id="closeCheckout">关闭</button>
+        <h2 id="checkoutTitle">确认订单</h2>
+        <p class="dialog-intro" id="checkoutIntro"></p>
+        <form class="checkout-form" id="checkoutForm">
+            <label for="receiverName">收货人<input id="receiverName" name="name" autocomplete="name" placeholder="请输入收货人姓名" required></label>
+            <label for="receiverPhone">联系电话<input id="receiverPhone" name="phone" autocomplete="tel" placeholder="请输入手机号" required></label>
+            <label for="receiverAddress">收货地址<textarea id="receiverAddress" name="address" autocomplete="street-address" rows="3" placeholder="请输入详细收货地址" required></textarea></label>
+            <div class="dialog-actions"><button class="button button-secondary" type="button" id="cancelCheckout">再想想</button><button class="button button-primary" type="submit" id="submitCheckout">确认下单</button></div>
+        </form>
+    </div>
+</div>
+<div class="lightbox" id="lightbox" role="dialog" aria-label="图片预览"><img id="lightboxImage" src="/assets/hero-collection-desk.png" alt="图片预览"></div>
+
+<script src="/common.js"></script>
+<script>
+    let product = null;
+    let gallery = [];
+    let currentImage = 0;
+    let quantity = 1;
+    const categoryMap = {};
+    const productId = new URLSearchParams(location.search).get('id');
+
+    function parseIds(value) { try { const parsed = JSON.parse(value || '[]'); return Array.isArray(parsed) ? parsed.map(Number) : []; } catch (error) { return []; } }
+    function categoryName(item) { const ids = parseIds(item.categoryIds); let category = ids.map(id => categoryMap[id]).find(Boolean); const seen = new Set(); while (category && category.parentCategoryId && Number(category.parentCategoryId) !== 0 && !seen.has(Number(category.id))) { seen.add(Number(category.id)); category = categoryMap[category.parentCategoryId]; } return category ? category.name : '收藏品'; }
+    function updateQuantity(delta) { quantity = Math.max(1, Math.min(Number(product.stock) || 1, quantity + delta)); const input = document.getElementById('quantity'); input.value = quantity; if (delta && !Sekai.prefersReducedMotion() && Element.prototype.animate) input.animate([{ transform: 'scale(.88)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(.16,1,.3,1)' }); document.getElementById('checkoutIntro').textContent = `${product.name}，数量 ${quantity}，合计 ${Sekai.fmtMoney(Number(product.price) * quantity)}`; }
+    function renderGallery() {
+        const main = document.getElementById('galleryMain');
+        main.innerHTML = gallery[currentImage] ? `<img src="${Sekai.esc(gallery[currentImage])}" alt="${Sekai.esc(product.name)}" id="mainGalleryImage" data-intro>` : '<span class="gallery-empty">暂无商品图片</span>';
+        Sekai.playIntro(main, { duration: 380, stagger: 0 });
+        document.getElementById('thumbRow').innerHTML = gallery.map((image, index) => `<button class="thumb ${index === currentImage ? 'active' : ''}" type="button" data-index="${index}"><img src="${Sekai.esc(image)}" alt="第 ${index + 1} 张商品图片"></button>`).join('');
+        Sekai.$$('.thumb').forEach(button => button.addEventListener('click', () => { currentImage = Number(button.dataset.index); renderGallery(); }));
+        document.getElementById('mainGalleryImage')?.addEventListener('click', () => { document.getElementById('lightboxImage').src = gallery[currentImage]; document.getElementById('lightbox').classList.add('open'); });
+    }
+    function openCheckout() { if (!Sekai.requireLogin()) return; updateQuantity(0); document.getElementById('checkoutDialog').classList.add('open'); document.getElementById('receiverName').focus(); }
+    function closeCheckout() { document.getElementById('checkoutDialog').classList.remove('open'); }
+    function addToCart() { if (!Sekai.requireLogin()) return; const button = document.getElementById('cartButton'); button.disabled = true; button.textContent = '加入中'; Sekai.api('/trade/cart/add/api', { method: 'POST', body: { productId, quantity } }).then(result => { button.disabled = false; button.textContent = '加入购物车'; if (Sekai.isSuccess(result)) { Sekai.toast('已加入购物车', 'success'); Sekai.refreshCartBadge(); } else if (result) Sekai.toast(result.message || '加入失败', 'error'); }); }
+    function renderProduct(sellerName) {
+        document.getElementById('detailLayout').hidden = false;
+        document.getElementById('detailSection').hidden = false;
+        document.getElementById('crumbName').textContent = product.name || '商品详情';
+        document.getElementById('productCategory').textContent = categoryName(product);
+        document.getElementById('productName').textContent = product.name || '未命名商品';
+        document.getElementById('productDescription').textContent = product.description || '卖家还没有补充描述。';
+        document.getElementById('productPrice').textContent = Sekai.fmtMoney(product.price);
+        document.getElementById('productStock').textContent = `${Number(product.stock) || 0} 件`;
+        document.getElementById('productId').textContent = `#${product.id}`;
+        document.getElementById('productDate').textContent = Sekai.dateLabel(product.gmtCreated).substring(0, 10);
+        document.getElementById('stockHint').textContent = Number(product.stock) > 0 ? `最多 ${product.stock} 件` : '暂时售罄';
+        document.getElementById('sellerName').textContent = sellerName || '商品发布者';
+        document.getElementById('sellerAvatar').textContent = (sellerName || 'S').charAt(0).toUpperCase();
+        gallery = Sekai.parseImages(product.images);
+        renderGallery();
+        const detailImages = Sekai.parseImages(product.detail);
+        const detailImagesBox = document.getElementById('detailImages');
+        detailImagesBox.innerHTML = detailImages.length ? detailImages.map(image => `<img src="${Sekai.esc(image)}" alt="${Sekai.esc(product.name)} 详情图" data-intro>`).join('') : '<div class="empty-state"><h3>卖家还没有补充详情图</h3><p>商品描述和库存信息仍以页面上方为准。</p></div>';
+        Sekai.playIntro(detailImagesBox, { duration: 560, stagger: 60 });
+        document.getElementById('detailText').textContent = product.description || '';
+        const owner = Sekai.currentUser && Number(Sekai.currentUser.id) === Number(product.userId);
+        const unavailable = !Number(product.stock);
+        if (owner || unavailable) { document.getElementById('buyButton').disabled = true; document.getElementById('cartButton').disabled = true; document.getElementById('buyButton').textContent = owner ? '这是你的商品' : '暂时售罄'; }
+        if (owner) { document.getElementById('cartButton').textContent = '去管理'; document.getElementById('cartButton').disabled = false; document.getElementById('cartButton').onclick = () => { location.href = '/product/mine'; }; }
+        if (new URLSearchParams(location.search).get('buy') === '1' && !owner && !unavailable) window.setTimeout(openCheckout, 300);
+    }
+    async function load() {
+        if (!productId) throw new Error('缺少商品编号');
+        const [categories, detail] = await Promise.all([fetch('/category/list/api').then(response => response.json()), fetch(`/product/detail/api?id=${encodeURIComponent(productId)}`).then(response => response.json())]);
+        if (Sekai.isSuccess(categories)) (categories.data || []).forEach(category => { categoryMap[category.id] = category; });
+        if (!Sekai.isSuccess(detail)) throw new Error(detail?.message || '商品不存在');
+        product = detail.data;
+        let sellerName = '';
+        if (product.userId) { const seller = await Sekai.api(`/api/user/byId?id=${product.userId}`); if (Sekai.isSuccess(seller)) sellerName = seller.data.name || seller.data.userName || ''; }
+        renderProduct(sellerName);
+    }
+    document.getElementById('decreaseQty').addEventListener('click', () => updateQuantity(-1));
+    document.getElementById('increaseQty').addEventListener('click', () => updateQuantity(1));
+    document.getElementById('buyButton').addEventListener('click', openCheckout);
+    document.getElementById('cartButton').addEventListener('click', addToCart);
+    document.getElementById('closeCheckout').addEventListener('click', closeCheckout);
+    document.getElementById('cancelCheckout').addEventListener('click', closeCheckout);
+    document.getElementById('checkoutDialog').addEventListener('click', event => { if (event.target.id === 'checkoutDialog') closeCheckout(); });
+    document.getElementById('lightbox').addEventListener('click', event => { if (event.target.id === 'lightbox') event.currentTarget.classList.remove('open'); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeCheckout(); document.getElementById('lightbox').classList.remove('open'); } });
+    document.getElementById('checkoutForm').addEventListener('submit', async event => { event.preventDefault(); const receiver = { name: document.getElementById('receiverName').value.trim(), phone: document.getElementById('receiverPhone').value.trim(), address: document.getElementById('receiverAddress').value.trim() }; if (!receiver.name || !receiver.phone || !receiver.address) { Sekai.toast('请填写完整的收货信息', 'error'); return; } const button = document.getElementById('submitCheckout'); button.disabled = true; button.textContent = '下单中'; const result = await Sekai.api('/trade/order/create/api', { method: 'POST', body: { productId, quantity, receiver } }); button.disabled = false; button.textContent = '确认下单'; if (Sekai.isSuccess(result)) { closeCheckout(); Sekai.toast('订单已创建，请到订单页完成模拟支付', 'success'); window.setTimeout(() => { location.href = '/trade/orders'; }, 850); } else if (result) Sekai.toast(result.message || '下单失败', 'error'); });
+    (async () => { await Sekai.init(null); try { await load(); } catch (error) { document.getElementById('detailError').hidden = false; document.getElementById('detailErrorText').textContent = error.message || '请返回市场重新选择。'; } })();
+</script>
+</body>
+</html>

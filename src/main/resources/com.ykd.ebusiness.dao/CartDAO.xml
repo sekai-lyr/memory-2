@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.youkeda.application.ebusiness.dao.CartDAO">
+
+    <resultMap id="CartResultMap" type="com.youkeda.application.ebusiness.dataobject.CartDO">
+        <id column="id" property="id"/>
+        <result column="gmt_created" property="gmtCreated"/>
+        <result column="gmt_modified" property="gmtModified"/>
+        <result column="user_id" property="userId"/>
+        <result column="product_id" property="productId"/>
+        <result column="quantity" property="quantity"/>
+    </resultMap>
+
+    <resultMap id="CartVOResultMap" type="com.youkeda.application.ebusiness.model.CartVO" extends="CartResultMap">
+        <result column="product_name" property="productName"/>
+        <result column="product_image" property="productImage"/>
+        <result column="price" property="price"/>
+        <result column="stock" property="stock"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.youkeda.application.ebusiness.dataobject.CartDO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ykd_ebusiness_cart (gmt_created, gmt_modified, user_id, product_id, quantity)
+        VALUES (now(), now(), #{userId}, #{productId}, #{quantity})
+    </insert>
+
+    <select id="selectById" resultMap="CartResultMap">
+        SELECT * FROM ykd_ebusiness_cart WHERE id = #{id}
+    </select>
+
+    <select id="selectByUserAndProduct" resultMap="CartResultMap">
+        SELECT * FROM ykd_ebusiness_cart
+        WHERE user_id = #{userId} AND product_id = #{productId}
+        LIMIT 1
+    </select>
+
+    <update id="updateQuantity">
+        UPDATE ykd_ebusiness_cart
+        SET quantity = #{quantity}, gmt_modified = now()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM ykd_ebusiness_cart WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByIds">
+        DELETE FROM ykd_ebusiness_cart
+        WHERE id IN
+        <foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <delete id="clearByUser">
+        DELETE FROM ykd_ebusiness_cart WHERE user_id = #{userId}
+    </delete>
+
+    <select id="selectCartList" resultMap="CartVOResultMap">
+        SELECT c.id, c.gmt_created, c.gmt_modified, c.user_id, c.product_id, c.quantity,
+               p.name AS product_name, p.images AS product_image, p.price, p.stock, p.status
+        FROM ykd_ebusiness_cart c
+        LEFT JOIN ykd_ebusiness_product p ON c.product_id = p.id
+        WHERE c.user_id = #{userId}
+        ORDER BY c.gmt_created DESC
+    </select>
+
+</mapper>

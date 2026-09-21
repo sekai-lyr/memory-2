@@ -6,6 +6,8 @@ public class BasePageParam {
 
     private int pageSize = 10;
 
+    private Long userId;
+
     public int getPagination() {
         return pagination;
     }
@@ -28,6 +30,14 @@ public class BasePageParam {
 
     public void setPageSize(int pageSize) {
         this.pageSize = pageSize;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public int getStart() {
